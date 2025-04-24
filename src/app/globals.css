@@ -1,26 +1,132 @@
-@import "tailwindcss";
+/* src/app/globals.css */
 
+/* Reset and Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Define CSS Variables for Theme Colors */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark Theme Palette */
+  --bg-primary: #1a1d21; /* Very dark background */
+  --bg-secondary: #2a2d35; /* Slightly lighter dark for cards/elements */
+  --bg-tertiary: #333842; /* Even lighter, for hover/borders */
+  --text-primary: #e0e0e0; /* Light grey main text */
+  --text-secondary: #a0a0a0; /* Dimmer text */
+  --text-title: #ffffff; /* White for titles */
+  --accent-primary: #4a90e2; /* Vibrant blue */
+  --accent-primary-dark: #3a7bc8; /* Darker blue for hover */
+  --accent-secondary: #facc15; /* Gold/Yellow for stars */
+  --accent-secondary-dark: #eab308;
+  --accent-success: #4ade80; /* Green for saved status */
+  --accent-danger: #f87171; /* Red for errors/remove */
+  --border-color: #444; /* Subtle border color */
+  --border-color-light: rgba(255, 255, 255, 0.1); /* Lighter border */
+
+  /* Font */
+  --font-sans: '__Inter_Var_a66727', '__Inter_Fallback_Var_a66727', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Using Inter from Next/Font */
+
+  /* Spacing & Radius */
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* You might need to apply font variables from layout.tsx instead */
 }
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-primary-dark);
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-title);
+  margin-bottom: var(--spacing-md);
+  line-height: 1.3;
+}
+
+/* Basic Input Styling (can be overridden by modules) */
+input[type="text"],
+input[type="url"],
+input[type="number"],
+button {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Utility class for visually hidden text (for icon buttons) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* src/app/globals.css */
+/* ... (Keep resets and other styles) ... */
+
+:root {
+  /* Dark Theme Palette */
+  --bg-primary: #121417;       /* Even darker background */
+  --bg-secondary: #1a1d21;     /* Dark grey */
+  --bg-content: rgba(26, 29, 33, 0.7); /* Content bg over Vanta */
+  --text-primary: #e5e7eb;     /* Lighter grey */
+  --text-secondary: #9ca3af;    /* Medium grey */
+  --text-title: #ffffff;       /* White */
+  --accent-primary: #38bdf8;   /* Sky Blue */
+  --accent-primary-dark: #0ea5e9;
+  --accent-secondary: #fbbf24; /* Amber */
+  --accent-secondary-dark: #f59e0b;
+  --accent-success: #34d399;   /* Emerald Green */
+  --accent-danger: #f87171;    /* Soft Red */
+  --border-color: #374151;     /* Darker grey border */
+  --border-color-light: rgba(255, 255, 255, 0.1);
+
+  /* Vanta Wave Colors (Example) */
+  --vanta-color1: 0x1d4ed8; /* Dark Blue */
+  --vanta-color2: 0x0ea5e9; /* Sky Blue */
+
+  /* Font */
+  --font-sans: '__Inter_Var_a66727', '__Inter_Fallback_Var_a66727', system-ui, sans-serif;
+
+  /* Spacing & Radius */
+  --spacing-xs: 0.25rem; --spacing-sm: 0.5rem; --spacing-md: 1rem; --spacing-lg: 1.5rem; --spacing-xl: 2rem; --spacing-xxl: 3rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+}
+
+html { color-scheme: dark; }
+html, body { /* ... base styles using vars ... */
+  background-color: var(--bg-primary); color: var(--text-primary); font-family: var(--font-sans);
+}
+/* ... other global styles (links, headings, sr-only) ... */

@@ -1,103 +1,113 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import styles from './page.module.css'; // Homepage specific styles
+
+// Import Navbar
+import Navbar from '@/components/Navbar';
+
+// Vanta.js Imports - Use dynamic import for client-side only library
+import type VantaBase from 'vanta/dist/vanta.base.js'; // Type for state
+import * as THREE from 'three'; // Import THREE
+
+// React Icons
+import { FaChevronRight } from 'react-icons/fa';
+
+// Define Vanta type more specifically if possible, or use 'any' for simplicity
+type VantaEffect = VantaBase | null | { destroy: () => void };
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [vantaEffect, setVantaEffect] = useState<VantaEffect>(null);
+  const vantaRef = useRef<HTMLDivElement>(null); // Ref for the background element
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Initialize Vanta.js NET effect on mount
+  useEffect(() => {
+    let effectInstance: VantaEffect = null; // Variable for cleanup scope
+
+    // Dynamically import Vanta NET only on the client-side
+    import('vanta/dist/vanta.net.min.js') // <<< CHANGE: Importing NET effect
+      .then((vantaModule) => {
+        const NET = vantaModule.default; // Access the default export
+
+        // Initialize only IF the ref exists AND effect hasn't been created
+        if (vantaRef.current && !vantaEffect) {
+          console.log("Attempting to initialize Vanta NET...");
+          try {
+            effectInstance = NET({ // <<< CHANGE: Calling NET effect
+              el: vantaRef.current,
+              THREE: THREE, // Pass the THREE object
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              // --- NET Effect Options ---
+              color: 0x38bdf8,      // Use accent color (Sky Blue hex) - var(--accent-primary)
+              backgroundColor: 0x121417, // Match CSS background - var(--bg-primary)
+              points: 12.00,         // Number of points
+              maxDistance: 22.00,    // Max distance between points for lines
+              spacing: 18.00         // Spacing between points
+              // showDots: false      // Optionally hide the points
+            });
+            setVantaEffect(effectInstance); // Store the live instance in state
+            console.log("Vanta NET Initialized Successfully.");
+          } catch (error) {
+            console.error("Vanta NET initialization failed:", error);
+          }
+        } else if (vantaEffect) {
+          console.log("Vanta effect already initialized.");
+        } else if (!vantaRef.current) {
+          console.error("Vanta container ref not found during initialization attempt.");
+        }
+      })
+      .catch((error) => console.error("Failed to dynamically load Vanta NET:", error));
+
+    // Cleanup function: Called when component unmounts
+    return () => {
+      if (vantaEffect && typeof vantaEffect.destroy === 'function') {
+        console.log("Destroying Vanta NET...");
+        vantaEffect.destroy();
+        setVantaEffect(null); // Clear state
+        console.log("Vanta NET destroyed.");
+      } else if (effectInstance && typeof effectInstance.destroy === 'function') {
+         // Fallback cleanup if state update didn't happen before unmount
+         console.log("Destroying Vanta NET (from effect closure)...");
+         effectInstance.destroy();
+         console.log("Vanta NET destroyed (from effect closure).");
+      } else {
+        console.log("Cleanup: No active Vanta effect found to destroy.");
+      }
+    };
+  // Run effect only once on mount, relying on !vantaEffect check internally
+  }, []); // Empty dependency array is generally correct for this pattern
+
+  return (
+    <div className={styles.pageWrapper}>
+      {/* Vanta Background Container - Needs ref */}
+      <div ref={vantaRef} className={styles.vantaBackground}></div>
+
+      {/* Navbar */}
+      <Navbar />
+
+      {/* Main Content (Keep the styled text/button) */}
+      <main className={styles.mainContent}>
+        <div className={styles.heroSection}>
+          <h1 className={styles.mainTitle}>
+            Find the <span className={styles.highlight}>Perfect</span> Loop
+          </h1>
+          <p className={styles.description}>
+            Instantly analyze YouTube videos for their most replayed moments. Save suggestions, mark custom sections, and master your favorite parts.
+          </p>
+          <Link href="/favorites" className={styles.ctaButton}>
+            <span>Explore Favorites</span>
+            <FaChevronRight aria-hidden="true"/>
+          </Link>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }

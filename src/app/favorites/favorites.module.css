@@ -1,0 +1,87 @@
+/* src/app/favorites/favorites.module.css */
+
+/* Assume base styles for .container, .pageWrapper, buttons, lists etc. exist */
+/* Add/Verify styles related to the timeline and song item layout */
+
+.songItem {
+  display: flex;
+  align-items: flex-start; /* Align items top */
+  gap: var(--spacing-md, 1rem);
+  margin-bottom: var(--spacing-xs, 0.25rem); /* Reduced bottom margin */
+  flex-wrap: wrap;
+}
+
+.thumbnail {
+  width: 50px; height: 50px;
+  object-fit: cover; border-radius: var(--radius-sm, 4px); flex-shrink: 0;
+  border: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.1));
+}
+
+.songDetails {
+    flex-grow: 1;
+    margin-right: var(--spacing-md, 1rem);
+    display: flex; /* Allow duration to sit next to title potentially */
+    flex-direction: column; /* Stack title and duration */
+    gap: var(--spacing-xs, 0.25rem);
+}
+
+.songTitle {
+  font-size: 1.15rem; font-weight: 600;
+  color: var(--text-title, #fff);
+  /* No margin-right needed if using gap in parent */
+}
+
+.songDuration {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #aaa);
+    font-style: italic;
+}
+
+
+.songActions {
+  display: flex; gap: var(--spacing-sm, 0.5rem); flex-shrink: 0;
+  margin-left: auto; /* Push actions to the right */
+}
+
+.noTimeline {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #888);
+  font-style: italic;
+  text-align: center;
+  margin: var(--spacing-sm, 0.5rem) 0; /* Add vertical margin */
+  padding: var(--spacing-xs, 0.25rem);
+  opacity: 0.7;
+  /* Optional border for placeholder */
+  /* border: 1px dashed var(--border-color, #ccc); */
+  /* border-radius: var(--radius-sm, 4px); */
+}
+
+.sectionListContainer {
+   margin-top: var(--spacing-sm, 0.5rem); /* Consistent spacing */
+}
+.suggestionsContainer { /* Optional style for suggestions */
+    margin-top: var(--spacing-md, 1rem);
+    padding-top: var(--spacing-sm, 0.5rem);
+    border-top: 1px dashed var(--border-color, #ccc);
+}
+
+
+/* Ensure other styles like .actionButton, .removeButton etc. exist */
+/* Example placeholder styles if missing */
+.actionButton { padding: 5px 10px; cursor: pointer; }
+.removeButton { padding: 5px; cursor: pointer; background: none; border: none; color: red; }
+.actionButtonSmall { padding: 3px 6px; cursor: pointer; }
+.removeButtonSmall { padding: 3px; cursor: pointer; background: none; border: none; color: grey; }
+.sectionForm { margin: 10px 0; }
+.inputField { padding: 5px; margin-right: 5px; }
+.sectionSaveButton { padding: 5px 10px; cursor: pointer; background-color: lightgreen; }
+.sectionListContainer { margin-top: 10px; }
+.sectionListHeader { font-weight: bold; margin-bottom: 5px; }
+.sectionList { list-style: none; padding-left: 15px; }
+.sectionItem { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.sectionName { /* Your style */ }
+.sectionActions { /* Your style */ }
+.toggleSaveButtonActive { cursor: pointer; }
+.toggleSaveButtonInactive { cursor: pointer; }
+.suggestionSaved .sectionName { font-style: italic; color: green; }
+

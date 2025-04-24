@@ -1,0 +1,83 @@
+/* src/components/TimelineVisualizer.module.css */
+
+.timelineContainer {
+    margin: var(--spacing-md) 0; /* More vertical margin */
+    padding: var(--spacing-xs) 0;
+    width: 100%;
+    box-sizing: border-box;
+    /* background-color: rgba(0, 0, 0, 0.1); Optional subtle bg */
+    /* border-radius: var(--radius-md); */
+  }
+  
+  .timelineTrack {
+    width: 100%;
+    height: 28px; /* Taller */
+    background-color: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Inner shadow */
+  }
+  
+  .sectionMarker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* Gradient background for markers */
+    background-image: linear-gradient(to bottom, var(--accent-primary), var(--accent-primary-dark));
+    opacity: 0.85;
+    border-radius: 0; /* Blocky like Premiere */
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    /* Border between adjacent segments */
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 1px 0 0 0 rgba(0, 0, 0, 0.2); /* Right border */
+    min-width: 2px;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align label left */
+    overflow: hidden; /* Hide overflowing label */
+  }
+  /* Remove right border for the last marker visually */
+  .sectionMarker:last-child {
+     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  }
+  
+  
+  .sectionMarker:hover {
+    opacity: 1;
+    transform: scaleY(1.1); /* Grow slightly taller */
+    box-shadow: inset 0 0 0 1px rgba(0,0,0, 0.5), 0 0 5px var(--accent-primary); /* Add glow */
+    z-index: 1;
+  }
+  .sectionMarker:focus-visible { /* Use focus-visible for better accessibility */
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 1px;
+      z-index: 2;
+      opacity: 1;
+  }
+  
+  
+  .markerLabel {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 var(--spacing-xs);
+    pointer-events: none;
+  }
+  
+  /* Time labels below track */
+  .timeLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) 2px 0 2px; /* Align with track edges */
+  }
+  
