@@ -4,26 +4,25 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-// Ensure all needed types are imported
 import { FavoriteSong, SongSection, SuggestedChunkData } from '@/types';
-import styles from '../page.module.css'; // Common styles (assuming you have some)
+import styles from '../page.module.css'; // Common styles
 import favoriteStyles from './favorites.module.css'; // Specific styles
 import YouTubePlayer, { YouTubePlayerRef } from '@/components/YouTubePlayer'; // Import player
 import { YouTubePlayer as YouTubePlayerType } from 'react-youtube'; // Import player type
 
-// *** IMPORT THE TIMELINE COMPONENT ***
-import TimelineVisualizer from '@/components/TimelineVisualizer';
+// *** Import the INTERACTIVE Visual Timeline component ***
+import VisualTimeline from '@/components/VisualTimeline'; // Use the version from Response #55
 
 // Helper for IDs
 const generateId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : '_' + Math.random().toString(36).substr(2, 9);
 
-// Helper to format seconds into MM:SS for display
+// Helper to format seconds into MM:SS
 const formatTime = (seconds: number): string => {
-    if (isNaN(seconds) || seconds < 0) return "0:00"; // Handle edge cases
+    if (isNaN(seconds) || seconds < 0) return "00:00";
     const roundSeconds = Math.floor(seconds);
     const minutes = Math.floor(roundSeconds / 60);
-    const secs = roundSeconds % 60;
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    const secs = Math.floor(seconds % 60);
+    return `${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
 // Enum for Player States
@@ -33,224 +32,234 @@ enum PlayerState { UNSTARTED = -1, ENDED = 0, PLAYING = 1, PAUSED = 2, BUFFERING
 interface CurrentlyPlaying { videoId: string; section?: SongSection | SuggestedChunkData | null; }
 
 export default function FavoritesPage() {
-  // Core State
+  // --- STATE VARIABLES ---
   const [isClient, setIsClient] = useState(false);
   const [favorites, setFavorites] = useLocalStorage<FavoriteSong[]>('favoriteSongs', []);
-  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [videoUrl, setVideoUrl] = useState<string>(''); // Add Song input
   const [isLoadingAdd, setIsLoadingAdd] = useState<boolean>(false);
-  const [errorAdd, setErrorAdd] = useState<string | null>(null);
-
-  // Playback State
+  const [errorAdd, setErrorAdd] = useState<string | null>(null); // Add Song errors
   const [currentlyPlaying, setCurrentlyPlaying] = useState<CurrentlyPlaying | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState | null>(null);
   const playerComponentRef = useRef<YouTubePlayerRef>(null);
+  // Removed state related to old marking/manual add UI
 
-  // Manual Section Marking State
-  const [currentPlaybackTime, setCurrentPlaybackTime] = useState<number>(0);
-  const [isMarking, setIsMarking] = useState<boolean>(false);
-  const [startMark, setStartMark] = useState<number | null>(null);
-  const [endMark, setEndMark] = useState<number | null>(null);
-  const [markedSectionName, setMarkedSectionName] = useState<string>("");
-
-  // State for the inline manual add form
-  const [showManualAddForm, setShowManualAddForm] = useState<string | null>(null);
-  const [manualSectionName, setManualSectionName] = useState('');
-  const [manualSectionStart, setManualSectionStart] = useState('');
-  const [manualSectionEnd, setManualSectionEnd] = useState('');
-
-  // --- Effect for hydration fix ---
   useEffect(() => { setIsClient(true); }, []);
 
-  // --- Favorite Management ---
+  // --- HANDLER FUNCTIONS ---
   const extractVideoId = (url: string): string | null => { const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/; const match = url.match(regex); return match ? match[1] : null; };
 
-  // Updated Add Favorite function to store duration
+  // Add Favorite (Saves duration AND suggestions)
   const addFavorite = async (e: React.FormEvent) => {
      e.preventDefault(); setErrorAdd(null); if (!videoUrl.trim()) return;
      const videoId = extractVideoId(videoUrl); if (!videoId) { setErrorAdd("Invalid URL."); return; } if (favorites.some(fav => fav.videoId === videoId)) { setErrorAdd('Already added!'); return; }
      setIsLoadingAdd(true);
      try {
+       // Fetch data including duration
        const response = await fetch(`/api/getYoutubeData?videoId=${videoId}`);
        const data = await response.json();
        if (!response.ok) { throw new Error(data.error || `Fetch failed (${response.status})`); }
        if (!data.title) { throw new Error("API could not determine video title."); }
 
-       // Create the new favorite object, including duration
-       const newFavorite: FavoriteSong = {
-         videoId,
-         title: data.title,
-         thumbnailUrl: data.thumbnailUrl || '',
-         addedDate: new Date().toISOString(),
-         sections: [], // Start with no saved sections
-         originalSuggestions: data.suggestedChunks || [],
-         // Store duration only if it's a positive number, otherwise undefined
-         durationSeconds: data.durationSeconds && data.durationSeconds > 0 ? data.durationSeconds : undefined // *** STORE DURATION ***
-       };
+       const durationToSave = data.durationSeconds && data.durationSeconds > 0 ? data.durationSeconds : undefined;
+       const suggestionsToSave = Array.isArray(data.suggestedChunks) ? data.suggestedChunks : [];
 
-       setFavorites(prev => [...prev, newFavorite]); setVideoUrl(''); console.log("Added favorite:", newFavorite);
+       const newFavorite: FavoriteSong = {
+         videoId, title: data.title, thumbnailUrl: data.thumbnailUrl || '',
+         addedDate: new Date().toISOString(), sections: [],
+         originalSuggestions: suggestionsToSave, // Save suggestions
+         durationSeconds: durationToSave         // Save duration for timeline
+       };
+       setFavorites(prev => [...prev, newFavorite]); setVideoUrl('');
        if (data.operationalApiWarning) { setErrorAdd(`Note: ${data.operationalApiWarning}`); }
-     } catch (err: unknown) { console.error("Err adding favorite:", err); setErrorAdd(err instanceof Error ? err.message : "Unknown error."); }
-     finally { setIsLoadingAdd(false); }
+     } catch (err: unknown) { console.error("Err adding favorite:", err); setErrorAdd(err instanceof Error ? err.message : "Unknown error."); } finally { setIsLoadingAdd(false); }
   };
 
-  // Remove a favorite song entirely
-  const removeFavorite = (videoId: string) => { setFavorites(prev => prev.filter(song => song.videoId !== videoId)); if (currentlyPlaying?.videoId === videoId) { setCurrentlyPlaying(null); } };
+  // Remove Favorite (Ensure this works)
+  const removeFavorite = (videoId: string) => {
+    console.log("HANDLER: removeFavorite", videoId);
+    setFavorites(prev => prev.filter(song => song.videoId !== videoId));
+    if (currentlyPlaying?.videoId === videoId) { setCurrentlyPlaying(null); }
+  };
 
-  // --- Section Management ---
-
-  // Promote an original suggestion to a saved section
+  // Promote Suggestion (Uses default name)
   const promoteSuggestionToSection = (videoId: string, suggestion: SuggestedChunkData, index: number) => {
-     const newSection: SongSection = { id: generateId(), name: `Peak ${index + 1}`, startSeconds: suggestion.startSeconds, endSeconds: suggestion.endSeconds };
+     console.log("HANDLER: promoteSuggestionToSection", videoId, index);
+     const defaultName = `Section ${formatTime(suggestion.startSeconds)}`; // Default name
+     const newSection: SongSection = { id: generateId(), name: defaultName, startSeconds: suggestion.startSeconds, endSeconds: suggestion.endSeconds };
      setFavorites(prev => prev.map(song => {
          if (song.videoId === videoId) {
              const currentSections = song.sections || [];
              const alreadyExists = currentSections.some(sec => sec.startSeconds === newSection.startSeconds && sec.endSeconds === newSection.endSeconds);
-             if (alreadyExists) { console.warn(`Suggestion already saved`); return song; }
+             if (alreadyExists) return song;
              return { ...song, sections: [...currentSections, newSection].sort((a, b) => a.startSeconds - b.startSeconds) };
          } return song;
      }));
   };
 
-  // Add section via inline form (manual)
-  const handleAddManualSection = (videoId: string) => {
-    if (!manualSectionName.trim() || !manualSectionStart || !manualSectionEnd) { alert("Fill all fields."); return; } const start = parseFloat(manualSectionStart); const end = parseFloat(manualSectionEnd); if (isNaN(start) || isNaN(end) || start < 0 || end <= start) { alert("Invalid times."); return; }
-    const newSection: SongSection = { id: generateId(), name: manualSectionName.trim(), startSeconds: start, endSeconds: end };
-    setFavorites(prev => prev.map(song => song.videoId === videoId ? { ...song, sections: [...(song.sections || []), newSection].sort((a, b) => a.startSeconds - b.startSeconds) } : song));
-    setManualSectionName(''); setManualSectionStart(''); setManualSectionEnd(''); setShowManualAddForm(null);
-  };
+  // Remove AddManualSection handler
+  // const handleAddManualSection = ...
 
-  // Remove a SAVED section
+  // Remove Saved Section
   const removeSavedSection = (videoId: string, sectionId: string) => {
+    console.log("HANDLER: removeSavedSection", videoId, sectionId);
     setFavorites(prev => prev.map(song => song.videoId === videoId ? { ...song, sections: (song.sections || []).filter(sec => sec.id !== sectionId) } : song));
     if (currentlyPlaying?.videoId === videoId && currentlyPlaying?.section && 'id' in currentlyPlaying.section && currentlyPlaying.section.id === sectionId) { setCurrentlyPlaying(null); }
   };
 
-  // --- Manual Section Marking via Player ---
-  const handleMarkStart = () => { if (playerState !== PlayerState.PLAYING && playerState !== PlayerState.PAUSED) return; setStartMark(currentPlaybackTime); setEndMark(null); setIsMarking(true); setMarkedSectionName(""); };
-  const handleMarkEnd = () => { if (!isMarking || startMark === null || currentPlaybackTime <= startMark) { alert("Start not set/end before start."); return; } setEndMark(currentPlaybackTime); setIsMarking(false); };
-  const handleSaveMarkedSection = () => { if (startMark === null || endMark === null || endMark <= startMark || !currentlyPlaying?.videoId) { alert("Invalid times/no song."); return; } if (!markedSectionName.trim()) { alert("Enter name."); return; } const newSection: SongSection = { id: generateId(), name: markedSectionName.trim(), startSeconds: startMark, endSeconds: endMark }; setFavorites(prev => prev.map(song => song.videoId === currentlyPlaying.videoId ? { ...song, sections: [...(song.sections || []), newSection].sort((a, b) => a.startSeconds - b.startSeconds) } : song)); cancelMarking(); };
-  const cancelMarking = () => { setStartMark(null); setEndMark(null); setIsMarking(false); setMarkedSectionName(""); };
+  // Remove old marking handlers
+  // const handleMarkStart = ...; const handleMarkEnd = ...; const handleSaveMarkedSection = ...; const cancelMarking = ...;
 
-  // --- Playback Control ---
+  // Playback Control
   const playSongOrSection = (videoId: string, section: SongSection | SuggestedChunkData | null = null) => {
-    console.log("Setting play:", { videoId, section });
+    console.log("HANDLER: playSongOrSection", { videoId, sectionStart: section?.startSeconds });
     setCurrentlyPlaying({ videoId, section });
-    if (section === null || (section && 'id' in section)) { cancelMarking(); }
   };
 
-  // --- Player Event Handlers ---
-  const handlePlayerReady = useCallback((event: { target: YouTubePlayerType }) => {}, []);
-  const handlePlayerStateChange = useCallback((event: { data: number; target: YouTubePlayerType }) => { setPlayerState(event.data); if(event.data === PlayerState.ENDED || event.data === PlayerState.UNSTARTED) { cancelMarking(); } }, []);
-  const handlePlayerError = useCallback((event: { data: number; target: YouTubePlayerType }) => { console.error("Player Error:", event.data); let message = `Player Error: Code ${event.data}.`; if (event.data === 101 || event.data === 150) message = "Embedding disabled for this video."; setErrorAdd(message); setCurrentlyPlaying(null); cancelMarking(); }, []);
-  const handleTimeUpdate = useCallback((time: number) => { setCurrentPlaybackTime(time); }, []);
+  // *** Handler for Timeline Updates (Resizing) ***
+  const handleTimelineUpdate = (videoId: string, sectionId: string, newStart: number, newEnd: number) => {
+      console.log(`HANDLER: handleTimelineUpdate - Saving (videoId: ${videoId}, sectionId: ${sectionId}, newStart: ${newStart.toFixed(2)}, newEnd: ${newEnd.toFixed(2)})`);
+      if (newStart < 0 || newEnd <= newStart || isNaN(newStart) || isNaN(newEnd)) { console.error("Invalid times from timeline update."); return; }
+
+      setFavorites(prev => prev.map(song => {
+          if (song.videoId === videoId) {
+              const updatedSections = (song.sections || []).map(sec => {
+                  if (sec.id === sectionId) { return { ...sec, startSeconds: parseFloat(newStart.toFixed(3)), endSeconds: parseFloat(newEnd.toFixed(3)) }; }
+                  return sec;
+              }).sort((a, b) => a.startSeconds - b.startSeconds);
+              return { ...song, sections: updatedSections };
+          } return song;
+      }));
+      // Update currently playing state if needed
+      if (currentlyPlaying?.videoId === videoId && currentlyPlaying?.section && 'id' in currentlyPlaying.section && currentlyPlaying.section.id === sectionId) {
+           setCurrentlyPlaying(prev => prev ? ({ ...prev, section: { ...prev.section as SongSection, startSeconds: parseFloat(newStart.toFixed(3)), endSeconds: parseFloat(newEnd.toFixed(3)) } }) : null);
+      }
+  };
+
+  // *** Handler for Creating New Section from Timeline ***
+   const handleTimelineCreate = (videoId: string, start: number, end: number) => {
+        console.log(`HANDLER: handleTimelineCreate (videoId: ${videoId}, start: ${start.toFixed(2)}, end: ${end.toFixed(2)})`);
+        if (start < 0 || end <= start || isNaN(start) || isNaN(end)) { console.error("Invalid times from timeline create."); return; }
+
+        const defaultName = `Section ${formatTime(start)}`; // Automatic name
+        const newSection: SongSection = {
+            id: generateId(), name: defaultName,
+            startSeconds: parseFloat(start.toFixed(3)), endSeconds: parseFloat(end.toFixed(3))
+        };
+        setFavorites(prev => prev.map(song => song.videoId === videoId ? { ...song, sections: [...(song.sections || []), newSection].sort((a, b) => a.startSeconds - b.startSeconds) } : song));
+        console.log("Created new section via timeline:", newSection);
+    };
+
+  // Player Event Handlers
+  const handlePlayerReady = useCallback(() => { console.log("EVENT: PlayerReady"); }, []);
+  const handlePlayerStateChange = useCallback((event: { data: number; }) => { console.log("EVENT: PlayerStateChange", event.data); setPlayerState(event.data); }, []);
+  const handlePlayerError = useCallback((event: { data: number; }) => { console.error("EVENT: PlayerError", event.data); setErrorAdd(`Player Error Code ${event.data}.`); setCurrentlyPlaying(null); }, []);
+  // Removed time update handler if not needed
 
   // --- Main Render ---
   return (
-    // Use your preferred page wrapper / container class from theme setup
-    <div className={favoriteStyles.pageWrapper || favoriteStyles.container}>
-      {/* Optional: Add Navbar here if not in layout */}
-      {/* <Navbar /> */}
-      <div className={favoriteStyles.container}> {/* Inner container for content */}
-          <Link href="/" className={styles.navButton} style={{ marginBottom: '1.5rem', display: 'inline-block' }}> &larr; Back Home </Link>
-          <h1 className={favoriteStyles.title}>My Favorite Songs</h1>
+    <div className={favoriteStyles.container}>
+        <Link href="/" className={styles.navButton} style={{ marginBottom: '1.5rem', display: 'inline-block' }}> &larr; Back Home </Link>
+        <h1 className={favoriteStyles.title}>My Favorite Songs</h1>
 
-          {/* Add Song Form */}
-          <form onSubmit={addFavorite} className={favoriteStyles.addForm}>
-              <input type="url" placeholder="Enter YouTube Video URL" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} required className={favoriteStyles.inputField} disabled={isLoadingAdd}/>
-              {/* Use themed button styles */}
-              <button type="submit" className={favoriteStyles.analyzeButton || styles.analyzeButton} disabled={isLoadingAdd}>
-                  {isLoadingAdd ? 'Analyzing...' : 'Add & Suggest'}
-              </button>
-          </form>
-          {errorAdd && <p className={favoriteStyles.errorMessage}>{errorAdd}</p>}
+        {/* Add Song Form */}
+        <form onSubmit={addFavorite} className={favoriteStyles.addForm}>
+            <input type="url" placeholder="Enter YouTube Video URL" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} required className={styles.inputField} disabled={isLoadingAdd}/>
+            <button type="submit" className={favoriteStyles.analyzeButton} disabled={isLoadingAdd}> {isLoadingAdd ? 'Adding...' : 'Add Song & Get Suggestions'} </button>
+        </form>
+        {errorAdd && <p className={favoriteStyles.errorMessage}>{errorAdd}</p>}
 
-          {/* Player & Marking Area */}
-          <div className={favoriteStyles.playerArea}>
-               <div className={favoriteStyles.playerContainer}> {currentlyPlaying?.videoId ? ( <YouTubePlayer ref={playerComponentRef} videoId={currentlyPlaying.videoId} section={currentlyPlaying.section} onPlayerReady={handlePlayerReady} onStateChange={handlePlayerStateChange} onError={handlePlayerError} onTimeUpdate={handleTimeUpdate} /> ) : ( <div className={favoriteStyles.playerPlaceholder}>Select a song or section to play</div> )} </div>
-               {currentlyPlaying?.videoId && ( <div className={favoriteStyles.markingControls}> <div className={favoriteStyles.playbackTime}> Time: {formatTime(currentPlaybackTime)} </div> <div className={favoriteStyles.markButtons}> <button onClick={handleMarkStart} disabled={isMarking || (playerState !== PlayerState.PLAYING && playerState !== PlayerState.PAUSED)} className={favoriteStyles.actionButton}> 📌 Mark Start {startMark !== null ? `(${formatTime(startMark)})` : ''} </button> <button onClick={handleMarkEnd} disabled={!isMarking || startMark === null || (playerState !== PlayerState.PLAYING && playerState !== PlayerState.PAUSED)} className={favoriteStyles.actionButton}> 🏁 Mark End {endMark !== null ? `(${formatTime(endMark)})` : ''} </button> </div> {startMark !== null && endMark !== null && ( <div className={favoriteStyles.saveSectionArea}> <input type="text" placeholder="Name this section" value={markedSectionName} onChange={(e) => setMarkedSectionName(e.target.value)} className={favoriteStyles.inputField} /> <button onClick={handleSaveMarkedSection} disabled={!markedSectionName.trim()} className={`${favoriteStyles.actionButton} ${favoriteStyles.sectionSaveButton}`}> 💾 Save Marked </button> <button onClick={cancelMarking} className={favoriteStyles.actionButton} title="Cancel Marking">✖️ Cancel</button> </div> )} {isMarking && startMark !== null && endMark === null && ( <div className={favoriteStyles.markingIndicator}> Marking from {formatTime(startMark)}... Click 'Mark End'. <button onClick={cancelMarking} className={favoriteStyles.actionButtonSmall} title="Cancel Marking">Cancel</button> </div> )} </div> )}
-          </div>
+        {/* Player Area (Simplified - no marking controls) */}
+        <div className={favoriteStyles.playerArea}>
+           <div className={favoriteStyles.playerContainer}> {currentlyPlaying?.videoId ? ( <YouTubePlayer ref={playerComponentRef} videoId={currentlyPlaying.videoId} section={currentlyPlaying.section} onPlayerReady={handlePlayerReady} onStateChange={handlePlayerStateChange} onError={handlePlayerError} /> ) : ( <div className={favoriteStyles.playerPlaceholder}>Select a song or section to play</div> )} </div>
+           {/* Removed marking controls div */}
+        </div>
 
-          {/* Favorites List Area */}
-          <div className={favoriteStyles.listArea}>
-               {!isClient ? ( <p>Loading favorites...</p> ) : (
-                 favorites.length === 0 ? ( <p>No favorites added yet.</p> ) : (
-                   <ul className={favoriteStyles.songList}>
-                     {favorites.map(song => (
-                       <li key={song.videoId} className={favoriteStyles.songItemContainer}>
-                         {/* Song Info Row */}
-                         <div className={favoriteStyles.songItem}>
+        {/* Favorites List Area */}
+        <div className={favoriteStyles.listArea}>
+             {!isClient ? ( <p>Loading favorites...</p> ) : (
+               favorites.length === 0 ? ( <p>No favorites added yet.</p> ) : (
+                 <ul className={favoriteStyles.songList}>
+                   {favorites.map(song => (
+                     <li key={song.videoId} className={favoriteStyles.songItemContainer}>
+                       {/* Song Info Row (Restored Title, Removed Add Custom Btn) */}
+                       <div className={favoriteStyles.songItem}>
                            <img src={song.thumbnailUrl} alt={song.title} className={favoriteStyles.thumbnail} />
                            <div className={favoriteStyles.songDetails}>
                                <span className={favoriteStyles.songTitle}>{song.title}</span>
-                               {/* Display Total Duration if available */}
                                {song.durationSeconds && <span className={favoriteStyles.songDuration}>({formatTime(song.durationSeconds)})</span>}
                            </div>
                            <div className={favoriteStyles.songActions}>
-                             <button onClick={() => playSongOrSection(song.videoId, null)} className={favoriteStyles.actionButton} title="Play Full Song">▶️ Play</button>
-                             <button onClick={() => setShowManualAddForm(showManualAddForm === song.videoId ? null : song.videoId)} className={favoriteStyles.actionButton} title="Add Custom Section">➕ Add Custom</button>
-                             <button onClick={() => removeFavorite(song.videoId)} className={favoriteStyles.removeButton} title="Remove Favorite">❌</button>
+                               <button onClick={() => playSongOrSection(song.videoId, null)} className={favoriteStyles.actionButton} title="Play Full Song">▶️ Play</button>
+                               {/* Removed Add Custom Button */}
+                               <button onClick={() => removeFavorite(song.videoId)} className={favoriteStyles.removeButton} title="Remove Favorite">❌</button>
                            </div>
+                       </div>
+
+                       {/* Removed Inline Manual Add Section Form */}
+
+                       {/* Visual Timeline - Pass BOTH update/create handlers */}
+                       {song.durationSeconds && song.durationSeconds > 0 ? (
+                         <VisualTimeline
+                           sections={song.sections || []}
+                           totalDuration={song.durationSeconds}
+                           onSectionClick={(section) => playSongOrSection(song.videoId, section)}
+                           // Pass implemented handlers
+                           onSectionUpdate={(sectionId, newStart, newEnd) => handleTimelineUpdate(song.videoId, sectionId, newStart, newEnd)}
+                           onSectionCreate={(start, end) => handleTimelineCreate(song.videoId, start, end)}
+                         />
+                       ) : (
+                         <div className={favoriteStyles.noTimeline}>Timeline requires song duration</div>
+                       )}
+
+                       {/* Saved Sections List */}
+                       {Array.isArray(song.sections) && song.sections.length > 0 && (
+                          <div className={favoriteStyles.sectionListContainer}>
+                             <h4 className={favoriteStyles.sectionListHeader}>Saved Sections:</h4>
+                             <ul className={favoriteStyles.sectionList}>
+                               {song.sections.map(section => (
+                                 <li key={section.id} className={favoriteStyles.sectionItem}>
+                                   <span className={favoriteStyles.sectionName}>{section.name} ({formatTime(section.startSeconds)} - {formatTime(section.endSeconds)})</span>
+                                   <div className={favoriteStyles.sectionActions}>
+                                     <button onClick={() => playSongOrSection(song.videoId, section)} className={favoriteStyles.actionButtonSmall} title="Play Saved Section">▶️</button>
+                                     <button onClick={() => removeSavedSection(song.videoId, section.id)} className={favoriteStyles.removeButtonSmall} title="Remove Saved Section">🗑️</button>
+                                   </div>
+                                 </li>
+                               ))}
+                             </ul>
+                          </div>
+                       )}
+                       {/* *** RESTORED: Suggestions List *** */}
+                       {Array.isArray(song.originalSuggestions) && song.originalSuggestions.length > 0 && (
+                         <div className={`${favoriteStyles.sectionListContainer} ${favoriteStyles.suggestionsContainer}`}>
+                           <h4 className={favoriteStyles.sectionListHeader}>Suggested Peaks ({song.originalSuggestions.length}):</h4>
+                           <ul className={favoriteStyles.sectionList}>
+                             {song.originalSuggestions.map((suggestion, index) => {
+                                 const isSaved = Array.isArray(song.sections) && song.sections.some((sec) => sec.startSeconds === suggestion.startSeconds && sec.endSeconds === suggestion.endSeconds);
+                                 return (
+                                   <li key={`orig-${index}-${suggestion.startSeconds}`} className={`${favoriteStyles.sectionItem} ${isSaved ? favoriteStyles.suggestionSaved : ''}`}>
+                                     <span className={favoriteStyles.sectionName}> Suggestion {index + 1} ({formatTime(suggestion.startSeconds)} - {formatTime(suggestion.endSeconds)}) </span>
+                                     <div className={favoriteStyles.sectionActions}>
+                                       <button onClick={() => playSongOrSection(song.videoId, suggestion)} className={favoriteStyles.actionButtonSmall} title="Preview Suggestion">▶️</button>
+                                       {isSaved ? (
+                                         <button onClick={() => { const savedSection = Array.isArray(song.sections) ? song.sections.find(sec => sec.startSeconds === suggestion.startSeconds && sec.endSeconds === suggestion.endSeconds) : undefined; if(savedSection) removeSavedSection(song.videoId, savedSection.id); } } className={favoriteStyles.toggleSaveButtonActive} title="Remove from Saved">⭐</button>
+                                       ) : (
+                                         <button onClick={() => promoteSuggestionToSection(song.videoId, suggestion, index)} className={favoriteStyles.toggleSaveButtonInactive} title="Add to Saved">☆</button>
+                                       )}
+                                     </div>
+                                   </li>
+                                 );
+                             })}
+                           </ul>
                          </div>
-
-                         {/* Inline Manual Add Section Form */}
-                         {showManualAddForm === song.videoId && ( <form className={favoriteStyles.sectionForm} onSubmit={(e) => { e.preventDefault(); handleAddManualSection(song.videoId); }}> <input type="text" placeholder="Custom Section Name" value={manualSectionName} onChange={e => setManualSectionName(e.target.value)} required className={favoriteStyles.inputField} /> <input type="number" placeholder="Start (sec)" value={manualSectionStart} onChange={e => setManualSectionStart(e.target.value)} required min="0" step="0.1" className={favoriteStyles.inputField}/> <input type="number" placeholder="End (sec)" value={manualSectionEnd} onChange={e => setManualSectionEnd(e.target.value)} required min="0" step="0.1" className={favoriteStyles.inputField}/> <button type="submit" className={`${favoriteStyles.actionButton} ${favoriteStyles.sectionSaveButton}`}> Save Custom </button> </form> )}
-
-                         {/* *** ADD TIMELINE VISUALIZER *** */}
-                         {/* Conditionally render only if duration is known and positive */}
-                         {song.durationSeconds && song.durationSeconds > 0 ? (
-                           <TimelineVisualizer
-                             // Ensure sections is always an array
-                             sections={Array.isArray(song.sections) ? song.sections : []}
-                             totalDuration={song.durationSeconds}
-                             onSectionClick={(section) => playSongOrSection(song.videoId, section)}
-                           />
-                         ) : (
-                           // Show placeholder if duration unknown - use specific class
-                           <div className={favoriteStyles.noTimeline}>Timeline unavailable</div>
-                         )}
-                         {/* *** END TIMELINE *** */}
-
-                         {/* List of SAVED Sections */}
-                         {Array.isArray(song.sections) && song.sections.length > 0 && (
-                             <div className={favoriteStyles.sectionListContainer}>
-                                 <h4 className={favoriteStyles.sectionListHeader}>Your Saved Sections:</h4>
-                                 <ul className={favoriteStyles.sectionList}>
-                                   {song.sections.map(section => ( <li key={section.id} className={favoriteStyles.sectionItem}> <span className={favoriteStyles.sectionName}>{section.name} ({formatTime(section.startSeconds)} - {formatTime(section.endSeconds)})</span> <div className={favoriteStyles.sectionActions}> <button onClick={() => playSongOrSection(song.videoId, section)} className={favoriteStyles.actionButtonSmall} title="Play Saved Section">▶️</button> <button onClick={() => removeSavedSection(song.videoId, section.id)} className={favoriteStyles.removeButtonSmall} title="Remove Saved Section">🗑️</button> </div> </li> ))}
-                                 </ul>
-                             </div>
-                         )}
-                         {/* List of ORIGINAL SUGGESTIONS (Keep if desired) */}
-                         {Array.isArray(song.originalSuggestions) && song.originalSuggestions.length > 0 && (
-                             <div className={`${favoriteStyles.sectionListContainer} ${favoriteStyles.suggestionsContainer}`}>
-                                 <h4 className={favoriteStyles.sectionListHeader}>Suggested Peaks ({song.originalSuggestions.length}):</h4>
-                                 <ul className={favoriteStyles.sectionList}>
-                                   {song.originalSuggestions.map((suggestion, index) => {
-                                       const isSaved = Array.isArray(song.sections) && song.sections.some((sec) => sec.startSeconds === suggestion.startSeconds && sec.endSeconds === suggestion.endSeconds);
-                                       return (
-                                         <li key={`orig-${index}-${suggestion.startSeconds}`} className={`${favoriteStyles.sectionItem} ${isSaved ? favoriteStyles.suggestionSaved : ''}`}>
-                                             <span className={favoriteStyles.sectionName}> Suggestion {index + 1} ({formatTime(suggestion.startSeconds)} - {formatTime(suggestion.endSeconds)}) </span>
-                                             <div className={favoriteStyles.sectionActions}>
-                                                 <button onClick={() => playSongOrSection(song.videoId, suggestion)} className={favoriteStyles.actionButtonSmall} title="Preview Suggestion">▶️</button>
-                                                 {isSaved ? (
-                                                     <button onClick={() => { const savedSection = Array.isArray(song.sections) ? song.sections.find(sec => sec.startSeconds === suggestion.startSeconds && sec.endSeconds === suggestion.endSeconds) : undefined; if(savedSection) removeSavedSection(song.videoId, savedSection.id); } } className={favoriteStyles.toggleSaveButtonActive} title="Remove from Saved">⭐</button>
-                                                 ) : (
-                                                     <button onClick={() => promoteSuggestionToSection(song.videoId, suggestion, index)} className={favoriteStyles.toggleSaveButtonInactive} title="Add to Saved">☆</button>
-                                                 )}
-                                             </div>
-                                         </li>
-                                       );
-                                   })}
-                                 </ul>
-                             </div>
-                         )}
-                       </li>
-                     ))}
-                   </ul>
-                 )
-               )}
+                       )}
+                       {/* *** END SUGGESTIONS LIST *** */}
+                     </li>
+                   ))}
+                 </ul>
+               )
+             )}
            </div>
-       </div> {/* End Inner container */}
-    </div> // End Page Wrapper / Main Container
+    </div>
   );
 }
 

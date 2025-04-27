@@ -1,0 +1,93 @@
+/* src/components/VisualTimeline.module.css */
+
+.timelineWrapper {
+    margin: var(--spacing-md, 1rem) 0;
+    padding: var(--spacing-xs, 0.25rem);
+    width: 100%;
+    box-sizing: border-box;
+    background-color: var(--bg-secondary, #2a2d35);
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-color, #444);
+    user-select: none;
+  }
+  
+  .timelineTrack {
+    width: 100%;
+    height: 32px;
+    background-color: var(--bg-tertiary, #333842);
+    border-radius: var(--radius-sm, 4px);
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+    cursor: crosshair; /* Cursor for creating sections */
+  }
+  
+  .markerContainer {
+    position: absolute; top: 0; bottom: 0;
+    min-width: calc(2 * var(--handle-width, 8px));
+    height: 100%; display: flex; box-sizing: border-box;
+    cursor: grab; /* Cursor for moving the whole block (if implemented) */
+  }
+  /* .markerContainer:active { cursor: grabbing; } */ /* Maybe later */
+  
+  .sectionMarkerBody {
+    flex-grow: 1; height: 100%;
+    background-color: var(--accent-primary, #60a5fa);
+    border-radius: 0;
+    transition: filter 0.15s ease-out;
+    border: none; padding: 0; display: flex; align-items: center; justify-content: flex-start;
+    overflow: hidden;
+    border-left: 1px solid rgba(0, 0, 0, 0.3);
+    border-right: 1px solid rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    cursor: pointer; /* Make body clickable for play */
+  }
+  .sectionMarkerBody:hover { filter: brightness(1.1); }
+  
+  .handle {
+    position: absolute; top: -2px; bottom: -2px;
+    width: var(--handle-width, 8px);
+    cursor: ew-resize; /* Resize cursor */
+    background-color: var(--accent-secondary, #fbbf24);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    z-index: 3; border-radius: 2px;
+    opacity: 0; transition: opacity 0.2s ease-in-out;
+  }
+  .markerContainer:hover .handle { opacity: 0.8; }
+  .handle:hover { opacity: 1 !important; filter: brightness(1.2); }
+  .handleStart { left: 0; }
+  .handleEnd { right: 0; }
+  
+  .markerLabel {
+    font-size: 0.7rem; font-weight: 600; color: rgba(255, 255, 255, 0.95);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 0 4px; pointer-events: none; line-height: 1;
+    margin-left: var(--handle-width, 8px); margin-right: var(--handle-width, 8px);
+  }
+  
+  /* Temporary box shown during creation drag */
+  .creationBox {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background-color: var(--accent-success, #34d399);
+      opacity: 0.5;
+      border: 1px dashed rgba(255, 255, 255, 0.7);
+      z-index: 5; /* Above existing markers */
+      pointer-events: none; /* Don't interfere with underlying track events */
+  }
+  
+  
+  .timeLabels { /* ... keep previous style ... */ }
+  
+  /* Global cursor overrides during drag */
+  body.draggingResize, body.draggingResize * {
+    cursor: ew-resize !important;
+    user-select: none !important;
+  }
+  body.draggingCreate, body.draggingCreate * {
+    cursor: crosshair !important;
+    user-select: none !important;
+  }
+  

@@ -130,3 +130,28 @@ html, body { /* ... base styles using vars ... */
   background-color: var(--bg-primary); color: var(--text-primary); font-family: var(--font-sans);
 }
 /* ... other global styles (links, headings, sr-only) ... */
+
+
+/* src/app/globals.css */
+
+/* ... Keep your existing Tailwind directives (@tailwind base, etc.) and other global styles ... */
+
+/* Add this base button reset */
+button {
+  font-family: inherit; /* Use the main font */
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  text-align: inherit;
+  /* Optional: Add a very basic default focus style globally */
+  /* outline-offset: 2px; */
+  /* &:focus-visible { */
+  /*   outline: 2px solid blue; */
+  /* } */
+}
+
+/* You might already have some base resets here from Tailwind or similar */
+

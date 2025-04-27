@@ -1,14 +1,13 @@
-// src/app/layout.tsx (CORRECTED)
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google"; // Or your chosen font
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-// Configure the font
 const inter = Inter({ subsets: ["latin"], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: "Song Favorites App", // Update if needed
-  description: "Save your favorite song sections",
+  title: "Song Chunk Saver", // Your App Title
+  description: "Save and practice your favorite song sections",
 };
 
 export default function RootLayout({
@@ -17,13 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Ensure NO whitespace, newlines, or comments between these two tags
+    // Keep lang and className on html
     <html lang="en" className={inter.variable}>
-      <body>
+      {/* Move suppressHydrationWarning directly to the body tag */}
+      <body suppressHydrationWarning={true}>
         {children}
-        {/* You can have comments INSIDE body or head, just not between html and body/head */}
       </body>
     </html>
-    // NO whitespace or comments here either
   );
 }

@@ -1,87 +1,374 @@
 /* src/app/favorites/favorites.module.css */
 
-/* Assume base styles for .container, .pageWrapper, buttons, lists etc. exist */
-/* Add/Verify styles related to the timeline and song item layout */
+/* Keep existing layout styles (.container, .addForm, .playerArea, .listArea, etc.) */
+/* Example container style */
+.container {
+  padding: 1rem 2rem; /* Add some padding */
+  max-width: 1000px; /* Optional max width */
+  margin: 0 auto; /* Center */
+}
+.addForm {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+.playerArea {
+    margin-bottom: 1.5rem;
+    /* Add styles if needed */
+}
+.playerContainer {
+    /* Add styles if needed */
+}
+.playerPlaceholder {
+    padding: 2rem;
+    text-align: center;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+}
+.markingControls {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+.playbackTime {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.markButtons {
+    display: flex;
+    gap: 0.5rem;
+}
+.saveSectionArea {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto; /* Push to right if space allows */
+}
+.markingIndicator {
+    font-size: 0.9rem;
+    color: var(--accent-primary);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
+.listArea {
+    margin-top: 2rem;
+}
+.songList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; /* Space between song items */
+}
+.songItemContainer {
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+
+/* Keep existing styles for .songItem, .thumbnail, .songDetails, .songTitle, .songDuration */
 .songItem {
   display: flex;
-  align-items: flex-start; /* Align items top */
+  align-items: center; /* Align items vertically */
   gap: var(--spacing-md, 1rem);
-  margin-bottom: var(--spacing-xs, 0.25rem); /* Reduced bottom margin */
+  margin-bottom: 0.5rem; /* Space before timeline/sections */
   flex-wrap: wrap;
 }
-
 .thumbnail {
-  width: 50px; height: 50px;
-  object-fit: cover; border-radius: var(--radius-sm, 4px); flex-shrink: 0;
-  border: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.1));
+    width: 60px; height: 60px; /* Slightly larger */
+    object-fit: cover;
+    border-radius: var(--radius-md, 6px);
+    flex-shrink: 0;
+    border: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.1));
 }
-
 .songDetails {
     flex-grow: 1;
-    margin-right: var(--spacing-md, 1rem);
-    display: flex; /* Allow duration to sit next to title potentially */
-    flex-direction: column; /* Stack title and duration */
-    gap: var(--spacing-xs, 0.25rem);
+    margin-right: 1rem; /* Space before actions */
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
-
 .songTitle {
-  font-size: 1.15rem; font-weight: 600;
-  color: var(--text-title, #fff);
-  /* No margin-right needed if using gap in parent */
+  font-size: 1.2rem; /* Larger title */
+  font-weight: 600;
+  color: var(--text-title, #e5e7eb);
+  line-height: 1.3;
 }
-
 .songDuration {
     font-size: 0.85rem;
-    color: var(--text-secondary, #aaa);
+    color: var(--text-secondary, #9ca3af);
     font-style: italic;
 }
-
-
 .songActions {
-  display: flex; gap: var(--spacing-sm, 0.5rem); flex-shrink: 0;
-  margin-left: auto; /* Push actions to the right */
+    display: flex;
+    gap: 0.75rem; /* More space between buttons */
+    flex-shrink: 0;
+    margin-left: auto; /* Push actions to the right */
+    align-items: center; /* Align buttons vertically */
 }
 
+
+/* Keep existing styles for .sectionListContainer, .sectionListHeader, .sectionList, .sectionItem, .sectionName */
+.sectionListContainer {
+   margin-top: 1rem;
+   padding-top: 1rem;
+   border-top: 1px solid var(--border-color); /* Separator */
+}
+.sectionListHeader {
+   font-size: 1rem;
+   font-weight: 600;
+   margin-bottom: 0.5rem;
+   color: var(--text-secondary);
+}
+.sectionList {
+   list-style: none;
+   padding-left: 0; /* No indent */
+   margin: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 0.5rem;
+}
+.sectionItem {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 0.25rem 0.5rem;
+   border-radius: var(--radius-sm);
+   transition: background-color 0.15s ease;
+}
+.sectionItem:hover {
+    background-color: var(--bg-hover, rgba(255, 255, 255, 0.05));
+}
+.sectionName {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+.sectionActions { /* For buttons within section items */
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Keep existing styles for .suggestionsContainer, .suggestionSaved */
+.suggestionsContainer {
+    border-top: 1px dashed var(--border-color-light, #6b7280); /* Dashed separator */
+}
+.suggestionSaved .sectionName { /* Style for saved suggestion names */
+    /* font-style: italic; */
+    color: var(--accent-success, #34d399); /* Indicate saved */
+}
+
+
+/* Keep .noTimeline style */
 .noTimeline {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-secondary, #888);
   font-style: italic;
   text-align: center;
-  margin: var(--spacing-sm, 0.5rem) 0; /* Add vertical margin */
-  padding: var(--spacing-xs, 0.25rem);
-  opacity: 0.7;
-  /* Optional border for placeholder */
-  /* border: 1px dashed var(--border-color, #ccc); */
-  /* border-radius: var(--radius-sm, 4px); */
+  margin: var(--spacing-md, 1rem) 0;
+  padding: var(--spacing-sm, 0.5rem);
+  opacity: 0.8;
+  background-color: var(--bg-tertiary, #374151);
+  border-radius: var(--radius-md, 8px);
 }
 
-.sectionListContainer {
-   margin-top: var(--spacing-sm, 0.5rem); /* Consistent spacing */
+/* Error Message Style */
+.errorMessage {
+    color: var(--accent-danger, #f87171);
+    background-color: var(--accent-danger-light, rgba(248, 113, 113, 0.1));
+    border: 1px solid var(--accent-danger, #f87171);
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
 }
-.suggestionsContainer { /* Optional style for suggestions */
-    margin-top: var(--spacing-md, 1rem);
-    padding-top: var(--spacing-sm, 0.5rem);
-    border-top: 1px dashed var(--border-color, #ccc);
+
+/* Inline form styles */
+.sectionForm {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--bg-tertiary);
+    border-radius: var(--radius-md);
 }
 
 
-/* Ensure other styles like .actionButton, .removeButton etc. exist */
-/* Example placeholder styles if missing */
-.actionButton { padding: 5px 10px; cursor: pointer; }
-.removeButton { padding: 5px; cursor: pointer; background: none; border: none; color: red; }
-.actionButtonSmall { padding: 3px 6px; cursor: pointer; }
-.removeButtonSmall { padding: 3px; cursor: pointer; background: none; border: none; color: grey; }
-.sectionForm { margin: 10px 0; }
-.inputField { padding: 5px; margin-right: 5px; }
-.sectionSaveButton { padding: 5px 10px; cursor: pointer; background-color: lightgreen; }
-.sectionListContainer { margin-top: 10px; }
-.sectionListHeader { font-weight: bold; margin-bottom: 5px; }
-.sectionList { list-style: none; padding-left: 15px; }
-.sectionItem { display: flex; justify-content: space-between; margin-bottom: 3px; }
-.sectionName { /* Your style */ }
-.sectionActions { /* Your style */ }
-.toggleSaveButtonActive { cursor: pointer; }
-.toggleSaveButtonInactive { cursor: pointer; }
-.suggestionSaved .sectionName { font-style: italic; color: green; }
+/* --- Button Styles --- */
+
+
+/* General Action Button Style (Play, Add Custom) */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem; /* Slightly smaller padding */
+  font-size: 0.85rem;
+  font-weight: 500; /* Medium weight */
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--button-bg, #4b5563); /* Default gray */
+  color: var(--button-text, #e5e7eb);
+  border: 1px solid var(--border-color, #6b7280);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  white-space: nowrap; /* Prevent wrapping */
+}
+.actionButton:hover {
+  background-color: var(--button-bg-hover, #525c6a);
+  border-color: var(--accent-primary-light, #818cf8);
+}
+.actionButton:active {
+    transform: scale(0.98);
+}
+.actionButton:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Primary Button Style (Add & Suggest, Save Custom, Save Marked) */
+.analyzeButton, .sectionSaveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--accent-primary, #6366f1); /* Primary color */
+  color: var(--button-text-primary, #ffffff);
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.analyzeButton:hover, .sectionSaveButton:hover {
+  background-color: var(--accent-primary-dark, #4f46e5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.analyzeButton:disabled, .sectionSaveButton:disabled {
+    background-color: var(--accent-primary-light, #818cf8);
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.analyzeButton:focus-visible, .sectionSaveButton:focus-visible {
+    outline: 2px solid var(--accent-primary-dark);
+    outline-offset: 2px;
+}
+
+
+/* Remove Button Style (❌) */
+.removeButton {
+  background-color: transparent;
+  color: var(--text-secondary, #9ca3af);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem; line-height: 1;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+.removeButton:hover {
+  background-color: var(--accent-danger-light, #fee2e2);
+  color: var(--accent-danger, #dc2626);
+}
+.removeButton:active {
+    transform: scale(0.9);
+}
+.removeButton:focus-visible {
+    outline: 2px solid var(--accent-danger);
+    outline-offset: 1px;
+}
+
+
+/* Small Action Buttons (▶️ in lists) */
+.actionButtonSmall {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem; /* Adjust size of icon/text */
+  line-height: 1;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--bg-tertiary, #4b5563);
+  color: var(--text-secondary, #d1d5db);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.actionButtonSmall:hover {
+  background-color: var(--accent-primary, #6366f1);
+  color: var(--button-text, #ffffff);
+}
+.actionButtonSmall:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 1px;
+}
+
+/* Small Remove Buttons (🗑️ in lists) */
+.removeButtonSmall {
+  padding: 0.25rem;
+  font-size: 0.9rem; line-height: 1;
+  color: var(--text-secondary, #9ca3af);
+  border-radius: var(--radius-sm, 4px);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.removeButtonSmall:hover {
+  color: var(--accent-danger, #dc2626);
+  background-color: var(--accent-danger-light, #fee2e2);
+}
+.removeButtonSmall:focus-visible {
+    outline: 2px solid var(--accent-danger);
+    outline-offset: 1px;
+}
+
+/* Toggle Save Buttons (⭐ / ☆ in suggestions) */
+.toggleSaveButtonActive, .toggleSaveButtonInactive {
+  font-size: 1.1rem; line-height: 1;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm, 4px);
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+.toggleSaveButtonActive {
+  color: var(--accent-secondary, #facc15); /* Gold color for active */
+}
+.toggleSaveButtonActive:hover {
+  transform: scale(1.1);
+}
+.toggleSaveButtonInactive {
+  color: var(--text-secondary, #9ca3af); /* Dim color for inactive */
+}
+.toggleSaveButtonInactive:hover {
+  color: var(--accent-secondary-dark, #eab308); /* Darker gold on hover */
+  transform: scale(1.1);
+}
+.toggleSaveButtonActive:focus-visible, .toggleSaveButtonInactive:focus-visible {
+    outline: 2px solid var(--accent-secondary);
+    outline-offset: 1px;
+}
+
+
+/* Ensure input fields have consistent styling (use common or favorite styles) */
+.inputField {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color, #4b5563);
+  background-color: var(--bg-input, #374151);
+  color: var(--text-primary, #f3f4f6);
+  border-radius: var(--radius-md, 6px);
+  font-size: 0.9rem;
+  margin-right: 0.5rem; /* Spacing */
+}
+.inputField:focus {
+    outline: 2px solid var(--accent-primary, #6366f1);
+    outline-offset: 1px;
+    border-color: transparent;
+}
 
