@@ -3,13 +3,14 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 // Using SuggestedChunkData which matches the output of findSuggestedChunks from API (paste-5)
 import { FavoriteSong, SongSection, SuggestedChunkData } from '@/types';
 import styles from '../page.module.css';
 import favoriteStyles from './favorites.module.css';
-import YouTubePlayer, { YouTubePlayerRef } from '@/components/YouTubePlayer';
-import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
+import YouTubePlayer, { YouTubePlayerRef } from '@/components/YoutubePlayer';
+// import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 
 // *** Import the INTERACTIVE Visual Timeline component (Use version from Response #77) ***
 import VisualTimeline from '@/components/VisualTimeline';
@@ -29,13 +30,13 @@ const formatTime = (seconds: number): string => {
 };
 
 // Enum for Player States
-enum PlayerState { UNSTARTED = -1, ENDED = 0, PLAYING = 1, PAUSED = 2, BUFFERING = 3, CUED = 5, }
+enum PlayerState { UNSTARTED = -1, ENDED = 0, PLAYING = 1, PAUSED = 2, BUFFERING = 3, CUED = 5 }
 
 // Interface for what's playing
 interface CurrentlyPlaying { videoId: string; section?: SongSection | SuggestedChunkData | null; }
 
 // Tolerance for checking duplicate sections (in seconds)
-const DUPLICATE_TIME_TOLERANCE = 0.1;
+// const DUPLICATE_TIME_TOLERANCE = 0.1;
 
 export default function FavoritesPage() {
   // --- STATE VARIABLES ---
@@ -45,7 +46,7 @@ export default function FavoritesPage() {
   const [isLoadingAdd, setIsLoadingAdd] = useState<boolean>(false);
   const [errorAdd, setErrorAdd] = useState<string | null>(null); // Add Song errors
   const [currentlyPlaying, setCurrentlyPlaying] = useState<CurrentlyPlaying | null>(null);
-  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
+  const [, setPlayerState] = useState<PlayerState | null>(null);
   const playerComponentRef = useRef<YouTubePlayerRef>(null);
   // Old UI state removed
 
@@ -133,7 +134,7 @@ export default function FavoritesPage() {
       if (newStart < 0 || newEnd <= newStart || isNaN(newStart) || isNaN(newEnd)) return;
       // *** Use setTimeout to defer state update ***
       setTimeout(() => {
-          setFavorites(prev => prev.map(song => { /* ... update logic ... */ }));
+          // setFavorites(prev => prev.map(song => { /* ... update logic ... */ }));
           // Update currently playing if needed
           if (currentlyPlaying?.videoId === videoId && currentlyPlaying?.section && 'id' in currentlyPlaying.section && currentlyPlaying.section.id === sectionId) {
              setCurrentlyPlaying(prev => prev ? ({ ...prev, section: { ...prev.section as SongSection, startSeconds: parseFloat(newStart.toFixed(3)), endSeconds: parseFloat(newEnd.toFixed(3)) } }) : null);
@@ -163,7 +164,7 @@ export default function FavoritesPage() {
                      if (song.videoId === videoId) {
                          const currentSections = song.sections || [];
                          // Add the new section first (potentially creating a temporary duplicate)
-                         let sectionsWithNew = [...currentSections, newSection].sort((a, b) => a.startSeconds - b.startSeconds);
+                         const sectionsWithNew = [...currentSections, newSection].sort((a, b) => a.startSeconds - b.startSeconds);
 
                          // *** WORKAROUND: Filter out duplicates based on time (keeping first instance) ***
                          const seenTimes = new Set<string>();
@@ -222,7 +223,15 @@ export default function FavoritesPage() {
                      <li key={song.videoId} className={favoriteStyles.songItemContainer}>
                        {/* Song Info Row (No Add Custom Btn) */}
                        <div className={favoriteStyles.songItem}>
-                           <img src={song.thumbnailUrl} alt={song.title} className={favoriteStyles.thumbnail} />
+                        {/* <img src={song.thumbnailUrl} alt={song.title} className={favoriteStyles.thumbnail} /> */}
+                        <Image 
+  src={song.thumbnailUrl}
+  alt={song.title}
+  width={120}  // Add appropriate dimensions
+  height={90}   // Match your design requirements
+  className={favoriteStyles.thumbnail}
+/>
+
                            <div className={favoriteStyles.songDetails}>
                                <span className={favoriteStyles.songTitle}>{song.title}</span>
                                {/* Display duration from API */}

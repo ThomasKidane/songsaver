@@ -130,7 +130,7 @@ function findSuggestedChunks(
     return candidateChunks
         .sort((a, b) => b.weightedScore - a.weightedScore)
         .slice(0, numSuggestions) // Take the top N
-        .map(({ peakIntensity, weightedScore, ...rest }) => rest); // Return only start/end seconds
+        .map(({ ...rest }) => rest); // Return only start/end seconds
 }
 
 

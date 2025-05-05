@@ -4,9 +4,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Playlist } from '@/types';
 import styles from '../page.module.css'; // Reuse styles
 import playlistStyles from './playlists.module.css'; // Specific styles
+
+export interface Playlist {
+  id: string;
+  name: string;
+  songVideoIds: string[];
+  createdDate: string;
+}
 
 // Helper for generating simple IDs (replace with nanoid or crypto.randomUUID in production)
 const generateId = () => '_' + Math.random().toString(36).substr(2, 9);
@@ -56,7 +62,7 @@ export default function PlaylistsPage() {
       </form>
 
       {playlists.length === 0 ? (
-        <p>You haven't created any playlists yet.</p>
+        <p>You haven&apos;t created any playlists yet.</p>
       ) : (
         <ul className={playlistStyles.playlistList}>
           {playlists.map(pl => (

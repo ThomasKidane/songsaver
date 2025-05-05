@@ -34,7 +34,6 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, React.Disp
     } catch (error) {
       console.error(`Error writing localStorage key “${key}”:`, error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, value]); // Re-run effect if key or value changes
 
   return [value, setValue];

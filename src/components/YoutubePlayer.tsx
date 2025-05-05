@@ -1,5 +1,5 @@
 // src/components/YouTubePlayer.tsx
-import React, { useEffect, forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import YouTube, { YouTubeProps, YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { SongSection, SuggestedChunkData } from '@/types'; // Import both types
 // Assuming you have this CSS module for the placeholder

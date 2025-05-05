@@ -90,7 +90,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   }, [totalDuration, xToTime]);
 
   // --- UPDATED Pointer Up Handler (with flag) ---
-  const handlePointerUp = useCallback((e: PointerEvent) => {
+  const handlePointerUp = useCallback(() => {
     // *** Prevent double execution ***
     if (isProcessingPointerUp.current) {
         console.log("Pointer Up: Already processing, skipping.");
@@ -247,11 +247,11 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
           return (
             <div key={section.id} className={styles.markerContainer} style={containerStyle} title={liveTitle}>
-                <div className={`${styles.handle} ${styles.handleStart}`} onPointerDown={(e) => handleHandlePointerDown(e, section, 'start')} role="slider" aria-label={`Adjust start of ${section.name}`} />
+                <div className={`${styles.handle} ${styles.handleStart}`} onPointerDown={(e) => handleHandlePointerDown(e, section, 'start')} role="slider" aria-label={`Adjust start of ${section.name}`} aria-valuenow={displayStart} />
                 <button type="button" className={styles.sectionMarkerBody} onClick={() => { if (!dragState) onSectionClick?.(section); }} aria-label={`Play section: ${section.name}`}>
                     <span className={styles.markerLabel}>{section.name}</span>
                 </button>
-                <div className={`${styles.handle} ${styles.handleEnd}`} onPointerDown={(e) => handleHandlePointerDown(e, section, 'end')} role="slider" aria-label={`Adjust end of ${section.name}`} />
+                <div className={`${styles.handle} ${styles.handleEnd}`} onPointerDown={(e) => handleHandlePointerDown(e, section, 'end')} role="slider" aria-label={`Adjust end of ${section.name}`} aria-valuenow={displayEnd} />
             </div>
           );
         })}
